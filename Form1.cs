@@ -20,6 +20,8 @@ namespace PullAMSData3
 
         private BindingSource bindingSource1 = new BindingSource();
 
+        List<string> tableList = new List<string>();
+
         public Form1()
         {
             InitializeComponent();
@@ -135,10 +137,15 @@ namespace PullAMSData3
             ////Database Container: works for OleDbMetaDataCollectionNames but not table:
             ////   odbcCon = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=\\10.1.1.17\\Data\\au.dbc");
            //DEVELOPMENT 
-            OleDbConnection connection = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=\\10.1.1.17\\Data\\au.dbc");
+            //OleDbConnection connection = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=\\10.1.1.17\\Data\\au.dbc");
             
-            //PRODUCTION
+            //PRODUCTION WORKS
             //OleDbConnection connection = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=\\10.1.1.17\\aw$\\Data\\au.dbc");
+
+            //PRODUCTION COPY
+            OleDbConnection connection = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=\\10.1.1.17\\CMImageLogs\\DataTransfers\\FoxPro Files to Joe\\Raw AMS Data Files\\Data\\au.dbc");
+
+
 
             try
             {
@@ -148,6 +155,7 @@ namespace PullAMSData3
             {
                 System.Windows.Forms.MessageBox.Show("Failed to make AMS connection. Error is: " + ex.Message);
             }
+
 
 
             foreach (DataGridViewRow row in dataGridViewAMSTables.SelectedRows)
@@ -169,6 +177,10 @@ namespace PullAMSData3
                 {
                     command = new OleDbCommand(@"select '" + row.Cells["TABLE_NAME"].Value.ToString() + ": ', count(*) from " + row.Cells["TABLE_NAME"].Value.ToString());
                 }
+
+                
+
+
                 //OleDbCommand command = new OleDbCommand(@"select * from conslog");
                 command.Connection = connection;
 
@@ -307,7 +319,7 @@ namespace PullAMSData3
 
         }
 
-        private void GetData(OleDbCommand command, string tableName)
+        private void GetData(OleDbCommand command, string tableName, bool autoStore = false)
         {
             try
             {
@@ -392,31 +404,37 @@ namespace PullAMSData3
 
                     fileName = tableName;
 
-                    SaveFileDialog sfd = new SaveFileDialog
+                    if (autoStore)
                     {
-                        Title = "Save .csv file for " + tableName,
-                        //Filter = ".xlsx Files (*.xlsx)|*.xlsx",
-                        //FileName = row.Cells["TABLE_NAME"].Value.ToString(),
-                        FileName = fileName,
-                        Filter = ".csv Files (*.csv)|*.csv",
-                        OverwritePrompt = true
-                    };
-
-                    if (sfd.ShowDialog() != DialogResult.OK)
-                    {
-                        MessageBox.Show("You did not select a destination so process is terminating");
-                        return;
+                        fullpath = @"C:\Users\nicho\Downloads\AMSExtracts\" + fileName + ".csv";
                     }
+                    else
+                    {
+                        SaveFileDialog sfd = new SaveFileDialog
+                        {
+                            Title = "Save .csv file for " + tableName,
+                            //Filter = ".xlsx Files (*.xlsx)|*.xlsx",
+                            //FileName = row.Cells["TABLE_NAME"].Value.ToString(),
+                            FileName = fileName,
+                            Filter = ".csv Files (*.csv)|*.csv",
+                            OverwritePrompt = true
+                        };
+
+                        if (sfd.ShowDialog() != DialogResult.OK)
+                        {
+                            MessageBox.Show("You did not select a destination so process is terminating");
+                            return;
+                        }
 
 
-                    //MessageBox.Show("Please wait while we save the file ......");
-                    Cursor.Current = Cursors.WaitCursor;
+                        //MessageBox.Show("Please wait while we save the file ......");
+                        Cursor.Current = Cursors.WaitCursor;
 
-                    path = Path.GetDirectoryName(sfd.FileName);
-                    filename = Path.GetFileNameWithoutExtension(sfd.FileName);
-                    fullname = Path.GetFileName(sfd.FileName);
-                    fullpath = Path.GetFullPath(sfd.FileName);
-
+                        path = Path.GetDirectoryName(sfd.FileName);
+                        filename = Path.GetFileNameWithoutExtension(sfd.FileName);
+                        fullname = Path.GetFileName(sfd.FileName);
+                        fullpath = Path.GetFullPath(sfd.FileName);
+                    }
 
                     Type tp;
 
@@ -447,6 +465,7 @@ namespace PullAMSData3
             }
         }
 
+        //Catalog Master
         private void btnODBC_Click(object sender, EventArgs e)
         {
             System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.WaitCursor;
@@ -506,6 +525,9 @@ namespace PullAMSData3
 
         private void Form1_Load(object sender, EventArgs e)
         {
+
+            LoadTabelNames();  // workaround because OleDbMetaDataCollectionNames is hanging
+
             //Production: AuctionWindows\Data
             //OleDbConnection connection = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=\\10.1.1.17\\aw$\\Data\\au.dbc");
 
@@ -541,6 +563,150 @@ namespace PullAMSData3
             //}
         }
 
+
+        private void LoadTabelNames()
+        {
+            //****************************************************************************************
+            //  (t) means too large - generated by hand
+            //  The provider could not .... - godbc failure generated by hand
+            //  Skipped second time means it failed for memory second time
+            //****************************************************************************************
+            //tableList.Add("accttype");          //do small
+            tableList.Add("address");           //do small
+            ////tableList.Add("anlog");           **by hand large
+            ////tableList.Add("ap");              **by hand large
+            //tableList.Add("apnotes");           //do small
+            //tableList.Add("appel");             //do small
+            //tableList.Add("appinfo");           //do small
+            //tableList.Add("apsort");            //do small
+            //tableList.Add("araptran");          //do small
+            ////////tableList.Add("bids");            **by hand 509080(t)
+            //tableList.Add("btype");             //do small
+            //tableList.Add("casetype");          //do small
+            ///////tableList.Add("category");         **The provider could not determine the decimal value. For example, the row was just created, the default for the decimal column was not available and the consume has not yet set a new decimal value 
+            //tableList.Add("cbserver");          //do small
+            //tableList.Add("conslog");           //do small
+            //tableList.Add("conslogd");          //do small
+            //tableList.Add("consstat");          //do small
+            //tableList.Add("contacts");          //do small
+            //tableList.Add("country");           //do small
+            //tableList.Add("credcard");          //do small
+            //tableList.Add("credin");            //do small
+            //tableList.Add("credpost");          //do small
+            //tableList.Add("currency");          //do small
+            //tableList.Add("custarch");          //do small
+            //tableList.Add("custdict");          //do small
+            //tableList.Add("custlog");           //do small
+            ////////tableList.Add("customer");        **by hand 44556(t)
+            //tableList.Add("ebayfees");          //do small
+            //tableList.Add("ebayinv");           //do small
+            //tableList.Add("expcntrl");          //do small
+            //tableList.Add("filcond");           //do small
+            //tableList.Add("filters");           //do small
+            //tableList.Add("generatepk");        //do small
+            //tableList.Add("grower");            //do small
+            //tableList.Add("handheld");          //do small
+            //tableList.Add("history");           //do small
+            //tableList.Add("index");             //do small
+            ////////tableList.Add("interest");        **by hand 81544(t)
+            ////////tableList.Add("invoice");         **by hand 64548(t)
+            //tableList.Add("invoicearch");       //do small
+            ///////tableList.Add("invpmts");          **The provider could not determine the decimal value. For example, the row was just created, the default for the decimal column was not available and the consume has not yet set a new decimal value 
+            //tableList.Add("lablset");           //do small
+            //tableList.Add("larchive");          //do small
+            //tableList.Add("lindex");            //do small
+            //tableList.Add("loggedinusers");     //do small
+            //tableList.Add("loginhistory");      //do small
+            //////tableList.Add("lots");              **by hand 465961(t)
+            //////tableList.Add("lotsdesc");          **by hand 460650(t)
+            /////tableList.Add("lottranx");           **by hand got too big
+            //////tableList.Add("mailhist");          **by hand 181701(t)
+            //tableList.Add("mailing");           //do small
+            //tableList.Add("memoae");            //do small
+            //tableList.Add("miscinv");           //do small
+            //tableList.Add("moreap");            //do small
+            //tableList.Add("mxlot");             //do small
+            //tableList.Add("newcust");           //do small
+            //tableList.Add("nextlot");           //do small
+            //tableList.Add("outbid");            //do small
+            ///////tableList.Add("paddle");           **by hand 103757(t)
+            //tableList.Add("paypal");            //do small
+            //tableList.Add("pbcalls");           //do small
+            //tableList.Add("pbfailed");          //do small
+            //tableList.Add("pfexport");          //do small
+            //tableList.Add("phonebid");          //do small
+            //tableList.Add("phrases");           //do small
+            //tableList.Add("pkgtypes");          //do small
+            //tableList.Add("postview");          //do small
+            //tableList.Add("profiles");          //do small
+            //tableList.Add("profit");            //do small
+            //tableList.Add("prtype");            //do small
+            //tableList.Add("qrystore");          //do small
+            //tableList.Add("readme");            //do small
+            //tableList.Add("release");           //do small
+            //tableList.Add("reportcatalog");     //do small
+            //tableList.Add("returns");           //do small
+            //////tableList.Add("salebids");          **by hand 165090(t)
+            //tableList.Add("sales");             //do small
+            //tableList.Add("securityaccess");    //do small
+            //tableList.Add("shiphist");          //do small
+            //tableList.Add("shipping");          //do small
+            //tableList.Add("size");              //do small
+            //tableList.Add("specinfo");          //do small
+            ///////tableList.Add("stamps");           **by hand 90987(t)
+            ///////tableList.Add("state");            //The provider could not determine the decimal value. For example, the row was just created, the default for the decimal column was not available and the consume has not yet set a new decimal value 
+            //tableList.Add("tasting");           //do small
+            //tableList.Add("taxtbl");            //do small
+            ///////tableList.Add("tranxtn");          **by hand 227975(t)
+            //tableList.Add("txtstore");          //do small
+            //tableList.Add("upszone");           //do small
+            //tableList.Add("useraccexceptions"); //do small
+            //tableList.Add("usergroups");        //do small
+            //tableList.Add("userprefs");         //do small
+            //tableList.Add("users");             //do small
+            //tableList.Add("usrgrpxref");        //do small
+            //tableList.Add("vatcode");           //do small
+            //tableList.Add("vmpri");             //do small
+            //tableList.Add("wantlist");          //do small
+            //tableList.Add("wbids");             //do small
+            //tableList.Add("wbidsin");           //do small
+            //tableList.Add("wbidsout");          //do small
+            //tableList.Add("wclass");            //do small
+            //tableList.Add("wconvert");          //do small
+            //tableList.Add("weights");           //do small
+            //tableList.Add("whse");              //do small
+            //tableList.Add("wine");              //do small
+            //tableList.Add("winehx");            //do small
+            //tableList.Add("wineprx");           //do small
+            //tableList.Add("winvoice");          //do small
+            //tableList.Add("wlots");             //do small
+            //tableList.Add("wreal");             //do small
+            //tableList.Add("wrealout");          //do small
+            //tableList.Add("wregi");             //do small
+            //tableList.Add("wregiin");           //do small
+            //tableList.Add("wregiout");          //do small
+            //tableList.Add("wureg");             //do small
+            ///////tableList.Add("ziptax");            **The provider could not determine the decimal value. For example, the row was just created, the default for the decimal column was not available and the consume has not yet set a new decimal value 
+            //tableList.Add("cwregi");            //do small
+
+
+
+            //Need to determine if e_ tables are needed (don;t have counts)
+            //tableList.Add("e_bidsbylot");
+            //tableList.Add("e_lothist");
+            //tableList.Add("e_lothist3");
+            //tableList.Add("e_mxlots");
+            //tableList.Add("e_phbidsbylot");
+            //tableList.Add("e_salelots");
+            //tableList.Add("e_tasting");
+            //tableList.Add("e_wine");
+            //tableList.Add("e_winehist");
+            //tableList.Add("e_winehx");
+            //tableList.Add("e_wineprx");
+            //tableList.Add("ro_lotsbyinvoice");
+            //tableList.Add("ro_lotsbysale");
+        }
+
         private void btnSelectAllRows_Click(object sender, EventArgs e)
         {
             foreach (DataGridViewRow row in dataGridViewAMSTables.Rows)
@@ -556,6 +722,10 @@ namespace PullAMSData3
             dataGridViewAMSTables.Rows.Clear();
 
             OleDbConnection connection = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=\\10.1.1.17\\aw$\\Data\\au.dbc");
+           
+            // local file works
+            //OleDbConnection connection = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=C:\users\nicho\Downloads\au.dbc");
+
 
             //Test: Auction\Data
             //OleDbConnection connection = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=\\10.1.1.17\\Data\\au.dbc");
@@ -566,33 +736,86 @@ namespace PullAMSData3
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show("Failed to make AMS connection. Error is: " + ex.Message);
+                System.Windows.Forms.MessageBox.Show("Failed to make AMS connection. Error is: " + ex.Message + "  --> connection string is: " + connection.ConnectionString);
             }
 
-            try
-            {
-                DataTable tables = connection.GetSchema(
-                System.Data.OleDb.OleDbMetaDataCollectionNames.Tables);
+            //try
+            //{
+            //    DataTable tables = connection.GetSchema(
+            //    System.Data.OleDb.OleDbMetaDataCollectionNames.Tables);
 
-                //foreach (System.Data.DataRow rowTables in tables.Rows)
-                //{
-                //    Console.Out.WriteLine(rowTables["table_name"].ToString());
-                //}
+            //    //foreach (System.Data.DataRow rowTables in tables.Rows)
+            //    //{
+            //    //    Console.Out.WriteLine(rowTables["table_name"].ToString());
+            //    //}
 
-                dataGridViewAMSTables.DataSource = bindingSource1;
-                bindingSource1.DataSource = tables;
+            //    dataGridViewAMSTables.DataSource = bindingSource1;
+            //    bindingSource1.DataSource = tables;
 
-            }
-            catch (Exception ex)
-            {
-                System.Windows.Forms.MessageBox.Show("Failed to get tables. Error is: " + ex.Message);
-            }
+            //}
+            //catch (Exception ex)
+            //{
+            //    System.Windows.Forms.MessageBox.Show("Failed to get tables. Error is: " + ex.Message);
+            //}
 
 
-            txtDataType.Text = "AMS Tables";
+            //txtDataType.Text = "AMS Tables";
             btnODBC.Visible = false;
             btnODBC.Enabled = false;
             System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.Default;
+
+        }
+
+        //This is production with "Test Workaround" button
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+            //production
+            //OleDbConnection connection = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=\\10.1.1.17\\aw$\\Data\\au.dbc");
+
+            //production copy
+            OleDbConnection connection = new OleDbConnection(@"Provider=VFPOLEDB.1;Data Source=\\10.1.1.17\\CMImageLogs\\DataTransfers\\FoxPro Files to Joe\\Raw AMS Data Files\\Data\\au.dbc");
+
+
+
+            try
+            {
+                connection.Open();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show("Failed to make AMS connection. Error is: " + ex.Message);
+            }
+
+            //*********** TEST ***************************
+            //OleDbCommand command = new OleDbCommand(@"select 'accttype: ', * from accttype");
+            //command.Connection = connection;
+            //GetData(command, "accttype");
+
+            //*********** TEST END***************************
+
+                foreach (string table in tableList)
+                {
+                    try
+                    {
+                        Console.WriteLine("start process table: " + table);
+                        OleDbCommand command = new OleDbCommand(@"select '" + table + ": ', * from " + table);
+                        command.Connection = connection;
+                        GetData(command, table, true); //autostore true goes to downloads\AMSExtracts
+                        Console.WriteLine("end process table: " + table);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.Forms.MessageBox.Show("Failed to make AMS connection. Error is: " + ex.Message);
+                    }
+                }
+            
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
 
         }
     }
